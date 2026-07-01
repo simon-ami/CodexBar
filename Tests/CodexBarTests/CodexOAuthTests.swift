@@ -4,13 +4,14 @@ import Testing
 
 struct CodexOAuthTests {
     private func makeContext(
+        runtime: ProviderRuntime = .app,
         sourceMode: ProviderSourceMode = .auto,
         includeCredits: Bool = true,
         includeOptionalUsage: Bool = true) -> ProviderFetchContext
     {
         let browserDetection = BrowserDetection(cacheTTL: 0)
         return ProviderFetchContext(
-            runtime: .app,
+            runtime: runtime,
             sourceMode: sourceMode,
             includeCredits: includeCredits,
             includeOptionalUsage: includeOptionalUsage,
@@ -777,10 +778,20 @@ struct CodexOAuthTests {
     }
 
     @Test
-    func `reset credits fetch is independent from optional usage display setting`() {
-        let context = self.makeContext(includeCredits: false, includeOptionalUsage: false)
+    func `reset credits fetch follows app runtime and CLI credits flag`() {
+        let appContext = self.makeContext(includeCredits: false, includeOptionalUsage: false)
+        let cliNoCreditsContext = self.makeContext(
+            runtime: .cli,
+            includeCredits: false,
+            includeOptionalUsage: true)
+        let cliCreditsContext = self.makeContext(
+            runtime: .cli,
+            includeCredits: true,
+            includeOptionalUsage: false)
 
-        #expect(CodexOAuthFetchStrategy._shouldFetchResetCreditsForTesting(context))
+        #expect(CodexOAuthFetchStrategy._shouldFetchResetCreditsForTesting(appContext))
+        #expect(CodexOAuthFetchStrategy._shouldFetchResetCreditsForTesting(cliNoCreditsContext) == false)
+        #expect(CodexOAuthFetchStrategy._shouldFetchResetCreditsForTesting(cliCreditsContext))
     }
 
     @Test

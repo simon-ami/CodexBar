@@ -195,8 +195,13 @@ struct CodexOAuthFetchStrategy: ProviderFetchStrategy {
         return try await Self.replacingWithCLIMonthlyLimitIfAvailable(oauthResult, context: context)
     }
 
-    private static func shouldFetchResetCredits(_: ProviderFetchContext) -> Bool {
-        true
+    private static func shouldFetchResetCredits(_ context: ProviderFetchContext) -> Bool {
+        switch context.runtime {
+        case .app:
+            true
+        case .cli:
+            context.includeCredits
+        }
     }
 
     func shouldFallback(on error: Error, context: ProviderFetchContext) -> Bool {
